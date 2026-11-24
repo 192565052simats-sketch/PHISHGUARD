@@ -1,0 +1,141 @@
+{
+  "source": "built-in generated dataset (offline)",
+  "samples": 14000,
+  "accuracy": 0.9971,
+  "precision": 0.9979,
+  "recall": 0.9964,
+  "f1": 0.9971,
+  "cv_mean": 0.9977,
+  "confusion_matrix": [
+    [
+      1397,
+      3
+    ],
+    [
+      5,
+      1395
+    ]
+  ],
+  "importance": [
+    {
+      "name": "keyword_count",
+      "label": "Suspicious keywords",
+      "value": 0.2467
+    },
+    {
+      "name": "suspicious_tld",
+      "label": "Risky TLD",
+      "value": 0.1383
+    },
+    {
+      "name": "has_https",
+      "label": "Uses HTTPS",
+      "value": 0.1042
+    },
+    {
+      "name": "brand_abuse",
+      "label": "Brand name misuse",
+      "value": 0.0805
+    },
+    {
+      "name": "num_subdomains",
+      "label": "Subdomain levels",
+      "value": 0.0556
+    },
+    {
+      "name": "host_digit_ratio",
+      "label": "Digits in hostname",
+      "value": 0.0446
+    },
+    {
+      "name": "num_dots",
+      "label": "Number of dots",
+      "value": 0.0415
+    },
+    {
+      "name": "path_length",
+      "label": "Path length",
+      "value": 0.0342
+    },
+    {
+      "name": "url_length",
+      "label": "URL length",
+      "value": 0.0333
+    },
+    {
+      "name": "hostname_length",
+      "label": "Hostname length",
+      "value": 0.0279
+    },
+    {
+      "name": "digit_ratio",
+      "label": "Digit ratio",
+      "value": 0.0276
+    },
+    {
+      "name": "is_shortener",
+      "label": "URL shortener",
+      "value": 0.0275
+    },
+    {
+      "name": "num_digits",
+      "label": "Digits in URL",
+      "value": 0.0258
+    },
+    {
+      "name": "num_special_chars",
+      "label": "Special characters",
+      "value": 0.0194
+    },
+    {
+      "name": "host_entropy",
+      "label": "Hostname randomness",
+      "value": 0.0193
+    },
+    {
+      "name": "num_params",
+      "label": "Query parameters",
+      "value": 0.0178
+    },
+    {
+      "name": "num_hyphens_host",
+      "label": "Hyphens in hostname",
+      "value": 0.0163
+    },
+    {
+      "name": "typosquat",
+      "label": "Look-alike domain",
+      "value": 0.0123
+    },
+    {
+      "name": "encoded_chars",
+      "label": "Encoded (%) chars",
+      "value": 0.0108
+    },
+    {
+      "name": "has_punycode",
+      "label": "Punycode (xn--)",
+      "value": 0.0079
+    },
+    {
+      "name": "has_ip",
+      "label": "IP address as host",
+      "value": 0.006
+    },
+    {
+      "name": "nonstandard_port",
+      "label": "Non-standard port",
+      "value": 0.0015
+    },
+    {
+      "name": "has_at_symbol",
+      "label": "'@' symbol in URL",
+      "value": 0.0009
+    },
+    {
+      "name": "double_slash_in_path",
+      "label": "'//' in path",
+      "value": 0.0001
+    }
+  ]
+}
