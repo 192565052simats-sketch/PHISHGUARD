@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PhishGuard - AI Phishing URL Detection</title>
+<style>
+:root{--bg:#02060a;--card:rgba(4,16,22,.82);--line:#0e4d4a;--tx:#d6fff6;--mut:#6fb8ad;--ok:#00ff9c;--warn:#ffd000;--bad:#ff2e63;--ac:#00e5ff}
+*{box-sizing:border-box}
+body{margin:0;font-family:Consolas,'Courier New',monospace;background:var(--bg);color:var(--tx);min-height:100vh}
+#rain{position:fixed;inset:0;z-index:0;opacity:.35}
+body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:
+ linear-gradient(rgba(0,255,200,.04) 1px,transparent 1px) 0 0/100% 3px,
+ radial-gradient(ellipse at center,transparent 40%,#000 100%)}
+header,main{position:relative;z-index:1}
+header{padding:22px 32px;border-bottom:1px solid var(--ac);box-shadow:0 0 22px rgba(0,229,255,.35);background:rgba(2,10,14,.85);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+h1{margin:0;font-size:22px;letter-spacing:1px;text-shadow:0 0 12px var(--ac)}h1 span{color:var(--ok)}.sub{color:var(--mut);font-size:12px;letter-spacing:2px}
+main{max-width:1200px;margin:0 auto;padding:24px;display:grid;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:20px;box-shadow:0 0 14px rgba(0,229,255,.12),inset 0 0 18px rgba(0,255,156,.03);backdrop-filter:blur(3px)}
+.card:not(.stat)>b:first-child{color:var(--ac);letter-spacing:1px;text-transform:uppercase;font-size:13px;text-shadow:0 0 8px rgba(0,229,255,.6)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text]{flex:1;min-width:260px;padding:14px;border-radius:4px;border:1px solid var(--ac);background:#000;color:var(--ok);font-size:15px;font-family:inherit;box-shadow:0 0 10px rgba(0,229,255,.25) inset}
+input[type=text]:focus{outline:none;box-shadow:0 0 14px var(--ac)}
+button{padding:13px 22px;border:1px solid var(--ac);border-radius:4px;background:rgba(0,229,255,.1);color:var(--ac);font-weight:700;cursor:pointer;font-size:14px;font-family:inherit;letter-spacing:1px;text-transform:uppercase;transition:.2s}
+button:hover{background:var(--ac);color:#000;box-shadow:0 0 18px var(--ac)}button.sec{border-color:var(--line);color:var(--mut)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:18px}
+.stat{text-align:center}.stat b{font-size:36px;display:block;text-shadow:0 0 14px currentColor}.stat span{color:var(--mut);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+.badge{display:inline-block;padding:6px 14px;border-radius:3px;font-weight:700;font-size:14px;letter-spacing:1px;border:1px solid}
+.Legitimate{background:rgba(0,255,156,.12);color:var(--ok);border-color:var(--ok);box-shadow:0 0 12px rgba(0,255,156,.5)}
+.Suspicious{background:rgba(255,208,0,.12);color:var(--warn);border-color:var(--warn);box-shadow:0 0 12px rgba(255,208,0,.5)}
+.Phishing{background:rgba(255,46,99,.14);color:var(--bad);border-color:var(--bad);box-shadow:0 0 14px rgba(255,46,99,.6);animation:pulse 1.2s infinite}
+@keyframes pulse{50%{box-shadow:0 0 24px rgba(255,46,99,.95)}}
+.gauge{height:16px;border-radius:3px;background:#000;overflow:hidden;border:1px solid var(--line)}
+.gauge i{display:block;height:100%;transition:width .6s;box-shadow:0 0 14px currentColor}
+ul{margin:8px 0 0;padding-left:20px}li{margin:5px 0;font-size:14px}
+.flag li::marker{color:var(--bad)}.good li::marker{color:var(--ok)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{padding:7px 8px;border-bottom:1px solid #0a2e31;text-align:left}
+th{color:var(--ac);font-weight:600;letter-spacing:1px;font-size:12px;text-transform:uppercase}.url{max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.err{color:var(--bad);margin-top:10px}.hide{display:none}.mut{color:var(--mut);font-size:13px}
+.bar{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:13px}.bar div.l{width:150px;color:var(--mut)}
+.bar div.t{flex:1;background:#000;border:1px solid #0a2e31;height:12px}.bar div.t i{display:block;height:100%;background:var(--ac);box-shadow:0 0 8px var(--ac)}
+.samples a{display:inline-block;margin:3px 4px 0 0;padding:4px 10px;border:1px solid var(--line);border-radius:3px;font-size:12px;color:var(--mut);cursor:pointer;text-decoration:none}
+.samples a:hover{color:#000;background:var(--ac);border-color:var(--ac)}
+summary{color:var(--mut)}a{text-decoration:none}
+</style></head><body><canvas id="rain"></canvas>
+<header><div><h1>🛡️ PHISH<span>GUARD</span> // AI PHISHING URL DETECTION &amp; RISK ANALYSIS</h1>
+<div class="sub">SIMATS · CSA0819 Python · Random Forest + URL feature analysis</div></div>
+<div class="mut">Model: Random Forest · {{ metrics.samples }} training URLs</div></header>
+<main>
+<section class="card"><b>Enter a URL to analyse</b>
+<div class="row" style="margin-top:10px"><input id="u" type="text" placeholder="e.g. https://www.google.com  or  http://paypa1-secure-login.xyz" autofocus>
+<button onclick="go()">Analyse URL</button></div>
+<div class="samples mut" style="margin-top:10px">Try: 
+<a onclick="t('https://www.google.com')">google.com</a><a onclick="t('https://www.amazon.in')">amazon.in</a><a onclick="t('https://github.com/login')">github login</a>
+<a onclick="t('http://paypa1.com/login')">paypa1.com</a><a onclick="t('http://secure-paypal-verify.xyz')">secure-paypal-verify.xyz</a><a onclick="t('http://192.168.1.5/login.php')">IP login</a><a onclick="t('http://google.com@evil.tk/login')">@ trick</a><a onclick="t('https://bit.ly/3xYz9')">short link</a></div>
+<div id="err" class="err hide"></div></section>
+
+<section id="res" class="card hide">
+<div class="row" style="justify-content:space-between;align-items:center"><div><span id="vb" class="badge"></span> &nbsp; <b id="rl"></b></div><div class="mut" id="dm"></div></div>
+<div style="margin:16px 0 6px" class="row" ><b>Risk score: <span id="rs"></span>%</b><span class="mut">(ML probability <span id="mp"></span>% · rule score <span id="ru"></span>%)</span></div>
+<div class="gauge"><i id="gi"></i></div>
+<div class="grid" style="margin-top:18px">
+<div><b>🚩 Suspicious characteristics</b><ul id="fl" class="flag"></ul></div>
+<div><b>✅ Good signs</b><ul id="gs" class="good"></ul></div></div>
+<details style="margin-top:16px"><summary class="mut" style="cursor:pointer">Show all extracted features (Module 1 output)</summary><table id="ft" style="margin-top:8px"></table></details>
+</section>
+
+<section class="grid">
+<div class="card stat"><b id="s_total">0</b><span>URLs analysed</span></div>
+<div class="card stat"><b id="s_leg" style="color:var(--ok)">0</b><span>Legitimate</span></div>
+<div class="card stat"><b id="s_sus" style="color:var(--warn)">0</b><span>Suspicious</span></div>
+<div class="card stat"><b id="s_phi" style="color:var(--bad)">0</b><span>Phishing</span></div></section>
+
+<section class="grid">
+<div class="card"><b>Detection statistics</b><div id="chart" style="display:flex;justify-content:center;margin-top:10px"></div></div>
+<div class="card"><b>Risk levels</b><div id="risk" style="margin-top:14px"></div>
+<div class="mut" style="margin-top:16px"><b style="color:var(--tx)">Model performance (held-out test set)</b><br>Accuracy {{ (metrics.accuracy*100)|round(2) }}% · Precision {{ (metrics.precision*100)|round(2) }}% · Recall {{ (metrics.recall*100)|round(2) }}% · F1 {{ (metrics.f1*100)|round(2) }}%<br><span style="font-size:12px">Measured on {{ metrics.source }}.</span></div></div>
+<div class="card"><b>Top features learned by Random Forest</b><div id="imp" style="margin-top:10px"></div></div></section>
+
+<section class="card"><div class="row" style="justify-content:space-between;align-items:center"><b>Analysis history</b>
+<div class="row"><a href="/report.csv"><button class="sec">⬇ Download report (CSV)</button></a><button class="sec" onclick="clr()">Clear</button></div></div>
+<table style="margin-top:10px"><thead><tr><th>Time</th><th>URL</th><th>Verdict</th><th>Risk</th><th>Score</th></tr></thead><tbody id="hist"></tbody></table></section>
+</main>
+<script>
+(function(){const c=document.getElementById('rain'),x=c.getContext('2d');let w,h,cols,drops;
+function init(){w=c.width=innerWidth;h=c.height=innerHeight;cols=Math.floor(w/16);drops=Array(cols).fill(0).map(()=>Math.random()*h/16)}
+init();addEventListener('resize',init);const ch='01ABCDEF<>/{}[]$#%@!?=+*';
+setInterval(()=>{x.fillStyle='rgba(2,6,10,.12)';x.fillRect(0,0,w,h);x.fillStyle='#00ff9c';x.font='14px monospace';
+drops.forEach((d,i)=>{x.fillText(ch[Math.floor(Math.random()*ch.length)],i*16,d*16);if(d*16>h&&Math.random()>.975)drops[i]=0;drops[i]++})},55)})();
+</script>
+<script>
+const $=id=>document.getElementById(id),COL={Legitimate:'#00ff9c',Suspicious:'#ffd000',Phishing:'#ff2e63'};
+const IMP={{ metrics.importance[:8]|tojson }};
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function t(x){$('u').value=x;go()}
+$('u').addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+async function go(){
+ const url=$('u').value;$('err').classList.add('hide');
+ const r=await fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+ const d=await r.json();
+ if(!r.ok){$('err').textContent='⚠ '+d.error;$('err').classList.remove('hide');return}
+ $('res').classList.remove('hide');
+ $('vb').textContent=d.verdict==='Legitimate'?'✔ LEGITIMATE':d.verdict==='Phishing'?'✖ PHISHING':'⚠ SUSPICIOUS';
+ $('vb').className='badge '+d.verdict;$('rl').textContent=d.risk_level+' risk';$('dm').textContent='Domain: '+d.registered_domain;
+ $('rs').textContent=d.risk_score;$('mp').textContent=d.ml_probability;$('ru').textContent=d.rule_score;
+ $('gi').style.width=Math.max(d.risk_score,2)+'%';$('gi').style.background=COL[d.verdict];
+ $('fl').innerHTML=(d.red_flags.length?d.red_flags:['None found']).map(x=>'<li>'+esc(x)+'</li>').join('');
+ $('gs').innerHTML=(d.good_signs.length?d.good_signs:['None']).map(x=>'<li>'+esc(x)+'</li>').join('');
+ $('ft').innerHTML='<tr><th>Feature</th><th>Value</th></tr>'+d.features.map(f=>'<tr><td>'+esc(f.label)+'</td><td>'+f.value+'</td></tr>').join('');
+ refresh();
+}
+function donut(s){
+ const vals=[s.legitimate,s.suspicious,s.phishing],cols=['#00ff9c','#ffd000','#ff2e63'],names=['Legitimate','Suspicious','Phishing'],tot=vals.reduce((a,b)=>a+b,0);
+ if(!tot)return '<div class="mut" style="padding:50px 0">No URLs analysed yet</div>';
+ let a=-Math.PI/2,p='';const R=70,r=44,cx=90,cy=90;
+ vals.forEach((v,i)=>{if(!v)return;const ang=v/tot*2*Math.PI;
+  if(v===tot){p+=`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${cols[i]}" stroke-width="${R-r}"/>`;return}
+  const x1=cx+R*Math.cos(a),y1=cy+R*Math.sin(a),x2=cx+R*Math.cos(a+ang),y2=cy+R*Math.sin(a+ang),x3=cx+r*Math.cos(a+ang),y3=cy+r*Math.sin(a+ang),x4=cx+r*Math.cos(a),y4=cy+r*Math.sin(a),l=ang>Math.PI?1:0;
+  p+=`<path d="M${x1} ${y1}A${R} ${R} 0 ${l} 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 ${l} 0 ${x4} ${y4}Z" fill="${cols[i]}"/>`;a+=ang});
+ const leg=names.map((n,i)=>`<div style="font-size:13px;margin:5px 0"><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${cols[i]};margin-right:6px"></span>${n}: <b>${vals[i]}</b> (${Math.round(vals[i]/tot*100)}%)</div>`).join('');
+ return `<div style="display:flex;gap:18px;align-items:center"><svg width="180" height="180">${p}<text x="90" y="96" text-anchor="middle" fill="#d6fff6" font-size="22" font-weight="700">${tot}</text></svg><div>${leg}</div></div>`}
+function bars(s){const m=Math.max(s.low,s.medium,s.high,1);
+ return [['Low',s.low,'#00ff9c'],['Medium',s.medium,'#ffd000'],['High',s.high,'#ff2e63']].map(([n,v,c])=>`<div class="bar"><div class="l">${n}</div><div class="t"><i style="width:${v/m*100}%;background:${c}"></i></div><b>${v}</b></div>`).join('')}
+async function refresh(){
+ const s=await (await fetch('/api/stats')).json();
+ $('s_total').textContent=s.total;$('s_leg').textContent=s.legitimate;$('s_sus').textContent=s.suspicious;$('s_phi').textContent=s.phishing;
+ $('chart').innerHTML=donut(s);$('risk').innerHTML=bars(s);
+ $('hist').innerHTML=s.history.length?s.history.map(h=>`<tr><td>${h.time}</td><td class="url" title="${esc(h.url)}">${esc(h.url)}</td><td><span class="badge ${h.verdict}" style="font-size:11px;padding:3px 9px">${h.verdict}</span></td><td>${h.risk_level}</td><td>${h.risk_score}%</td></tr>`).join(''):'<tr><td colspan=5 class="mut">Nothing yet</td></tr>'}
+async function clr(){await fetch('/api/clear',{method:'POST'});refresh()}
+const mx=Math.max(...IMP.map(i=>i.value));
+$('imp').innerHTML=IMP.map(i=>`<div class="bar"><div class="l">${esc(i.label)}</div><div class="t"><i style="width:${i.value/mx*100}%"></i></div><span>${(i.value*100).toFixed(1)}%</span></div>`).join('');
+refresh();
+</script></body></html>
